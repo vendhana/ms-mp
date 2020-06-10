@@ -1,0 +1,47 @@
+# ... Namespace YAML definition
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ms-mp
+  labels:
+    name: ms-mp
+
+---
+# ... Deployment YAML definition
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: ms-mp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      initContainers:
+        - name: init-customer
+          image: busybox:1.28
+          command: ['sh', '-c', "until nslookup customer-service.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for customer-service; sleep 5; done"]
+      containers:
+        - name: order-service
+          image: co.in.va.ms.mp.api/order_service:0.0.1
+
+---
+# ... Service YAML definition
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: ms-mp
+spec:
+  selector:
+    app: order-service
+  ports:
+    - port: 7010
+      targetPort: 7010
+  type: LoadBalancer

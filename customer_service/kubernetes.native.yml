@@ -1,0 +1,42 @@
+# ... Namespace YAML definition
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ms-mp-native
+  labels:
+    name: ms-mp-native
+
+---
+# ... Deployment YAML definition
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-service
+  namespace: ms-mp-native
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-service
+  template:
+    metadata:
+      labels:
+        app: customer-service
+    spec:
+     containers:
+        - name: customer-service
+          image: co.in.va.ms.mp.native.api/customer_service:0.0.1
+---
+# ... Service YAML definition
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service
+  namespace: ms-mp-native
+spec:
+  selector:
+    app: customer-service
+  ports:
+    - port: 7020
+      targetPort: 7020
+  type: LoadBalancer
